@@ -2,7 +2,6 @@ import pytest
 import requests
 
 
-# фикстура для создания юзера
 @pytest.fixture
 def create_user(base_url):
     def _create_user(user_id, username="user", firstname="no_name", lastname="no_name", email="example@mail.com", password="qwerty", phone="77777777777", userstatus=0):
@@ -25,7 +24,6 @@ def create_user(base_url):
     return _create_user
 
 
-# тест на получение юзера по юзернейму
 @pytest.mark.parametrize(
     "user_id, username, firstname, lastname",
     [
@@ -35,10 +33,8 @@ def create_user(base_url):
     ]
 )
 def test_get_user_by_username(base_url, create_user, user_id, username, firstname, lastname):
-    # регаем юзера
     user_data = create_user(user_id, username, firstname, lastname)
 
-    # делаем запрос к юзеру
     response = requests.get(f"{base_url}/user/{username}")
     assert response.status_code == 200, f"код {response.status_code}, {response.text}"
 
@@ -50,7 +46,6 @@ def test_get_user_by_username(base_url, create_user, user_id, username, firstnam
         assert response_data["lastName"] == user_data["lastName"], "lastName не совпадают"
 
 
-# тест на логин
 @pytest.mark.parametrize(
     "user_id, username, password",
     [
@@ -60,35 +55,28 @@ def test_get_user_by_username(base_url, create_user, user_id, username, firstnam
     ]
 )
 def test_login_user(base_url, create_user, user_id, username, password):
-    # регаем юзера
     create_user(user_id, username, password)
 
-    # делаем запрос на логин
     response = requests.get(f"{base_url}/user/login", params={"username": username, "password": password})
     assert response.status_code == 200, f"код {response.status_code}, {response.text}"
 
     assert "logged in user session" in response.text, "в логине отказано"
 
 
-# тест на логаут
 def test_logout_user(base_url, create_user):
     user_id = 301
     username = "logout_test"
     password = "qwerty"
-
-    # регаем юзера
+    
     create_user(user_id, username, password)
 
-    # логиним юзера
     response = requests.get(f"{base_url}/user/login", params={"username": username, "password": password})
     assert response.status_code == 200, f"код {response.status_code}, {response.text}"
 
-    # делаем запрос на логаут
     response = requests.get(f"{base_url}/user/logout")
     assert response.status_code == 200, f"код {response.status_code}, {response.text}"
 
 
-# тест на обновление данных пользователя
 @pytest.mark.parametrize(
     "user_id, username, updated_email, updated_phone",
     [
@@ -98,10 +86,8 @@ def test_logout_user(base_url, create_user):
     ]
 )
 def test_update_user(base_url, create_user, user_id, username, updated_email, updated_phone):
-    # ргеаем юзера
     user_data = create_user(user_id, username)
 
-    # обновляем данные
     updated_data = {
         "id": user_id,
         "username": username,
@@ -123,7 +109,6 @@ def test_update_user(base_url, create_user, user_id, username, updated_email, up
     assert response_data["phone"] == updated_phone, "email не обновлён"
 
 
-# тест на удаление пользователя
 @pytest.mark.parametrize(
     "user_id, username",
     [
@@ -133,13 +118,10 @@ def test_update_user(base_url, create_user, user_id, username, updated_email, up
     ]
 )
 def test_delete_user(base_url, create_user, user_id, username):
-    # регаем юзера
     create_user(user_id, username)
 
-    # удаляем юзера
     response = requests.delete(f"{base_url}/user/{username}")
     assert response.status_code == 200, f"ошибка удаления: {response.text}"
 
-    # проверяем удаление
     response = requests.get(f"{base_url}/user/{username}")
     assert response.status_code == 404, f"юзер не удален: {response.text}"
