@@ -2,7 +2,6 @@ import pytest
 import requests
 
 
-# фикстура для создания питомца
 @pytest.fixture
 def create_pet(base_url):
     def _create_pet(pet_id, name="no_name", status="available", category_name="not_defined", photo_urls=None, tags=None):
@@ -31,7 +30,6 @@ def create_pet(base_url):
     return _create_pet
 
 
-# фикстура для удаления питомца
 @pytest.fixture
 def delete_pet(base_url):
     def _delete_pet(pet_id):
@@ -41,7 +39,6 @@ def delete_pet(base_url):
     return _delete_pet
 
 
-# тест на проверку создания питомца и проверку переданных данных
 @pytest.mark.parametrize(
     "pet_id, name, status, category_name, photo_urls, tags",
     [
@@ -51,10 +48,8 @@ def delete_pet(base_url):
     ]
 )
 def test_create_and_get_pet(base_url, create_pet, pet_id, name, status, category_name, photo_urls, tags):
-    # создаем питомца
     pet_data = create_pet(pet_id, name, status, category_name, photo_urls, tags)
 
-    # делаем запрос к питомцу
     response = requests.get(f"{base_url}/pet/{pet_data['id']}")
     assert response.status_code == 200, f"код {response.status_code}, {response.text}"
 
@@ -67,7 +62,6 @@ def test_create_and_get_pet(base_url, create_pet, pet_id, name, status, category
     assert response_data["tags"] == pet_data["tags"], "tags питомца не совпадают"
 
 
-# тест на обновление данных питомца и проверку переданных данных
 @pytest.mark.parametrize(
     "pet_id, name, status, photo_urls, tags",
     [
@@ -77,10 +71,8 @@ def test_create_and_get_pet(base_url, create_pet, pet_id, name, status, category
     ]
 )
 def test_update_pet(base_url, create_pet, pet_id, name, status, photo_urls, tags):
-    # создаем питомца
     create_pet(pet_id=pet_id)
 
-    # запрос на обновление данных
     updated_pet_data = {
         "id": pet_id,
         "name": name,
@@ -101,13 +93,9 @@ def test_update_pet(base_url, create_pet, pet_id, name, status, photo_urls, tags
         assert response_data["tags"] == tags, "tags не обновились"
 
 
-# тест на удаление питомца
 def test_delete_pet(base_url, create_pet, delete_pet):
     pet_id = 301
-    # создаем питомца
     create_pet(pet_id)
-
-    # удаляем питомца
     delete_pet(pet_id)
 
     response = requests.get(f"{base_url}/pet/{pet_id}")
@@ -115,7 +103,6 @@ def test_delete_pet(base_url, create_pet, delete_pet):
     assert response.json()["message"] == "Pet not found"
 
 
-# тест на поиск питомца по статусу
 @pytest.mark.parametrize(
     "status",
     [
